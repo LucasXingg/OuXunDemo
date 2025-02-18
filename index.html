@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鸥寻商品demo</title>
+    <title>商品demo</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,6 +43,10 @@
         button:hover {
             background-color: #0056b3;
         }
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
         .output {
             background-color: #f9f9f9;
             padding: 10px;
@@ -59,13 +63,13 @@
         .toggle-advanced {
             color: #007BFF;
             cursor: pointer;
-            text-decoration: underline;
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>鸥寻商品demo</h1>
+        <h1>商品demo</h1>
 
         <!-- Token Settings -->
         <div class="section">
@@ -86,23 +90,19 @@
                 <label for="prompt">Prompt:</label>
                 <textarea type="text" id="prompt" rows="6" placeholder="Write a prompt here...">你是一个二手卖家的个人助理，你的任务是帮助用户为他们的商品创建引人注目的介绍，他们会给你商品的标题。请将介绍限制在100字以内。</textarea>
 
-                <label for="temperature">Temperature:</label>
+                <label for="temperature">Temperature: (模型温度:0～2，数值越高模型随机性越强)</label>
                 <input type="number" id="temperature" step="0.1" min="0" max="2" value="0.7">
 
                 <label for="maxTokens">Max Tokens:</label>
                 <input type="number" id="maxTokens" min="1" value="100">
 
-                <label for="topP">Top-P:</label>
-                <input type="number" id="topP" step="0.1" min="0" max="1" value="0.9">
+                <label for="frequencyPenalty">Frequency Penalty: (-2~2, 高数值代表模型会倾向于不重复已有内容)</label>
+                <input type="number" id="frequencyPenalty" step="0.1" min="-2" max="2" value="0">
 
-                <label for="stopSequences">Stop Sequences (comma-separated):</label>
-                <input type="text" id="stopSequences" value="\n, ###">
+                <label for="presencePenalty">Presence Penalty: (-2～2， 高数值代表模型会倾向于讨论更广泛的话题)</label>
+                <input type="number" id="presencePenalty" step="0.1" min="-2" max="2" value="0">
 
-                <label for="frequencyPenalty">Frequency Penalty:</label>
-                <input type="number" id="frequencyPenalty" step="0.1" min="0" max="2" value="0.5">
-
-                <label for="presencePenalty">Presence Penalty:</label>
-                <input type="number" id="presencePenalty" step="0.1" min="0" max="2" value="0.5">
+                <a href="https://api-docs.deepseek.com/api/create-chat-completion" target="_blank" rel="noopener noreferrer">API Docs</a>
             </div>
         </div>
 
@@ -148,8 +148,6 @@
             const prompt = document.getElementById('prompt').value;
             const temperature = parseFloat(document.getElementById('temperature').value);
             const maxTokens = parseInt(document.getElementById('maxTokens').value);
-            const topP = parseFloat(document.getElementById('topP').value);
-            const stopSequences = document.getElementById('stopSequences').value.split(',').map(s => s.trim());
             const frequencyPenalty = parseFloat(document.getElementById('frequencyPenalty').value);
             const presencePenalty = parseFloat(document.getElementById('presencePenalty').value);
 
@@ -174,8 +172,6 @@
                         "model": "deepseek-chat",
                         temperature: temperature,
                         max_tokens: maxTokens,
-                        top_p: topP,
-                        stop: stopSequences,
                         frequency_penalty: frequencyPenalty,
                         presence_penalty: presencePenalty
                     })
