@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鸥寻商品demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            
+            max-width: 600px;
+            width: 80%;
+            margin: 0 auto;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input, textarea {
+            box-sizing: border-box; 
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .advanced-settings {
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            display: none; /* Hidden by default */
+        }
+        .toggle-advanced {
+            color: #007BFF;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>鸥寻商品demo</h1>
+
+        <!-- Token Settings -->
+        <div class="section">
+            <label for="apiToken">API Key:</label>
+            <input type="text" id="apiToken" placeholder="这里填入API Key">
+        </div>
+
+        <!-- Input -->
+        <div class="section">
+            <label for="userInput">商品标题:</label>
+            <input id="userInput" placeholder="标题写在这里"></input>
+        </div>
+
+        <!-- Advanced Settings -->
+        <div class="section">
+            <div class="toggle-advanced" onclick="toggleAdvancedSettings()">▼ 高级设置</div>
+            <div class="advanced-settings" id="advancedSettings">
+                <label for="prompt">Prompt:</label>
+                <textarea type="text" id="prompt" rows="6" placeholder="Write a prompt here...">你是一个二手卖家的个人助理，你的任务是帮助用户为他们的商品创建引人注目的介绍，他们会给你商品的标题。请将介绍限制在100字以内。</textarea>
+
+                <label for="temperature">Temperature:</label>
+                <input type="number" id="temperature" step="0.1" min="0" max="2" value="0.7">
+
+                <label for="maxTokens">Max Tokens:</label>
+                <input type="number" id="maxTokens" min="1" value="100">
+
+                <label for="topP">Top-P:</label>
+                <input type="number" id="topP" step="0.1" min="0" max="1" value="0.9">
+
+                <label for="stopSequences">Stop Sequences (comma-separated):</label>
+                <input type="text" id="stopSequences" value="\n, ###">
+
+                <label for="frequencyPenalty">Frequency Penalty:</label>
+                <input type="number" id="frequencyPenalty" step="0.1" min="0" max="2" value="0.5">
+
+                <label for="presencePenalty">Presence Penalty:</label>
+                <input type="number" id="presencePenalty" step="0.1" min="0" max="2" value="0.5">
+            </div>
+        </div>
+
+        <!-- Output -->
+        <div class="section">
+            <label for="output">结果:</label>
+            <div class="output" id="output">结果会显示在这里...</div>
+        </div>
+
+        <!-- Submit Button -->
+        <button id="submitButton">提交</button>
+    </div>
+
+    <script>
+        // Toggle advanced settings visibility
+        function toggleAdvancedSettings() {
+            const advancedSettings = document.getElementById('advancedSettings');
+            const toggleButton = document.querySelector('.toggle-advanced');
+            if (advancedSettings.style.display === 'none') {
+                advancedSettings.style.display = 'block';
+                toggleButton.textContent = '▲ 高级设置';
+            } else {
+                advancedSettings.style.display = 'none';
+                toggleButton.textContent = '▼ 高级设置';
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('submitButton').addEventListener('click', async () => {
+            const apiToken = document.getElementById('apiToken').value;
+            const userInput = document.getElementById('userInput').value;
+
+            if (!apiToken || !userInput) {
+                alert('Please fill in the API Token and Input fields.');
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.style.backgroundColor = '#ccc'; // Gray out the button
+            submitButton.textContent = '处理中...'; // Update button text
+
+            // Collect advanced settings
+            const prompt = document.getElementById('prompt').value;
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const maxTokens = parseInt(document.getElementById('maxTokens').value);
+            const topP = parseFloat(document.getElementById('topP').value);
+            const stopSequences = document.getElementById('stopSequences').value.split(',').map(s => s.trim());
+            const frequencyPenalty = parseFloat(document.getElementById('frequencyPenalty').value);
+            const presencePenalty = parseFloat(document.getElementById('presencePenalty').value);
+
+            try {
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiToken}`
+                    },
+                    body: JSON.stringify({
+                        "messages": [
+                            {
+                                'content': prompt,
+                                'role': 'system'
+                            },
+                            {
+                                'content': userInput,
+                                'role': 'user'
+                            }
+                        ],
+                        "model": "deepseek-chat",
+                        temperature: temperature,
+                        max_tokens: maxTokens,
+                        top_p: topP,
+                        stop: stopSequences,
+                        frequency_penalty: frequencyPenalty,
+                        presence_penalty: presencePenalty
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`${response.status} ${errorData.error?.message || 'API error'}`);
+                }
+
+                const data = await response.json();
+                document.getElementById('output').innerText = data.choices[0].message.content;
+
+            } catch (error) {
+                document.getElementById('output').innerText = 'Error: ' + error.message;
+            } finally {
+                submitButton.disabled = false;
+                submitButton.style.backgroundColor = '#007BFF'; // Restore original color
+                submitButton.textContent = '提交'; // Restore original text
+            }
+        });
+    </script>
+</body>
+</html>
